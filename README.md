@@ -562,43 +562,61 @@ figma-cli/
 
 Want to contribute or test locally? Here's how to get up and running without publishing to npm.
 
-### Setup
+### First-Time Setup (Fresh Clone)
 
 ```bash
 git clone https://github.com/sahajamit/figma-cli.git
 cd figma-cli
-npm install
+npm install        # installs dependencies AND auto-builds (via `prepare` hook)
+npm link           # makes `figma` available as a global command
 ```
 
-### Build & Link
+That's it — two commands. `npm install` automatically compiles TypeScript into `dist/` and copies skill files, so you don't need a separate build step.
+
+Verify it works:
 
 ```bash
-npm run build       # Compile TypeScript → dist/ and copy skill files
-npm link            # Symlink `figma` globally so you can run it from anywhere
+figma --help       # should print the command list
 ```
 
-Now `figma` is available as a command in your terminal. Any changes you make take effect after rebuilding.
+### What Happens During `npm install`?
+
+The project uses npm's [`prepare` lifecycle hook](https://docs.npmjs.com/cli/v10/using-npm/scripts#life-cycle-scripts) to auto-build:
+
+```
+npm install
+  ├─ installs dependencies (chalk, commander, typescript, etc.)
+  ├─ runs `postinstall` → installs AI agent skill files (if dist/ exists)
+  └─ runs `prepare` → npm run build
+       ├─ tsc (compiles TypeScript → dist/)
+       ├─ chmod +x dist/bin/figma.js (makes the binary executable)
+       └─ copy-skills (copies SKILL.md files into dist/)
+```
+
+This means `dist/` is always created after install — you never need to run `npm run build` manually on first setup.
 
 ### Development Workflow
 
+After making code changes, you need to rebuild:
+
 ```bash
-# Option 1: Rebuild manually after changes
+# Option 1: Manual rebuild after changes
 npm run build
 figma me
 
-# Option 2: Watch mode (auto-recompile on save)
-npm run dev         # runs tsc --watch in the background
+# Option 2: Watch mode (auto-recompile on save, recommended for development)
+npm run dev         # runs tsc --watch — recompiles on every file save
 
 # In another terminal, test your changes:
-node dist/bin/figma.js me                    # run directly without npm link
-node dist/bin/figma.js files get ABC123xyz --depth 1
+figma me
+figma files get ABC123xyz --depth 1
 ```
 
 > **Tip:** `npm run dev` only recompiles TypeScript. If you edit skill files (`src/skills/`), run `npm run build` to copy them into `dist/`.
 
 ### Run Without Global Link
 
-If you don't want to `npm link`, you can always run the CLI directly:
+If you don't want to `npm link`, you can always run the compiled CLI directly:
 
 ```bash
 node dist/bin/figma.js me
@@ -637,10 +655,13 @@ node dist/bin/figma.js images export ABC123xyz --ids 1:2 --format png
 
 | Script | What it does |
 |--------|-------------|
-| `npm run build` | Compile TypeScript + copy skill files to `dist/` |
-| `npm run dev` | Watch mode — recompile on file changes |
+| `npm install` | Install deps + auto-build (creates `dist/`) |
+| `npm run build` | Compile TypeScript + chmod +x + copy skill files to `dist/` |
+| `npm run dev` | Watch mode — recompile TypeScript on file changes |
 | `npm start` | Run `dist/bin/figma.js` directly |
 | `npm link` | Make `figma` command available globally |
+| `figma install --skills` | Install AI skill files to `~/.claude/`, `~/.copilot/`, etc. |
+| `figma uninstall --skills` | Remove installed skill files |
 
 ---
 
