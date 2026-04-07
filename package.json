@@ -25,6 +25,7 @@
   "scripts": {
     "build": "tsc && chmod +x dist/bin/figma.js && npm run copy-skills",
     "copy-skills": "mkdir -p dist/src/skills/figma dist/src/skills/figma-files dist/src/skills/figma-design && cp src/skills/figma/SKILL.md dist/src/skills/figma/SKILL.md && cp src/skills/figma-files/SKILL.md dist/src/skills/figma-files/SKILL.md && cp src/skills/figma-design/SKILL.md dist/src/skills/figma-design/SKILL.md",
+    "prepare": "npm run build",
     "postinstall": "test -f dist/src/postinstall.js && node dist/src/postinstall.js || true",
     "dev": "tsc --watch",
     "start": "node dist/bin/figma.js",
