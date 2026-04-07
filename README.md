@@ -558,6 +558,92 @@ figma-cli/
 
 ---
 
+## Development Guide
+
+Want to contribute or test locally? Here's how to get up and running without publishing to npm.
+
+### Setup
+
+```bash
+git clone https://github.com/sahajamit/figma-cli.git
+cd figma-cli
+npm install
+```
+
+### Build & Link
+
+```bash
+npm run build       # Compile TypeScript → dist/ and copy skill files
+npm link            # Symlink `figma` globally so you can run it from anywhere
+```
+
+Now `figma` is available as a command in your terminal. Any changes you make take effect after rebuilding.
+
+### Development Workflow
+
+```bash
+# Option 1: Rebuild manually after changes
+npm run build
+figma me
+
+# Option 2: Watch mode (auto-recompile on save)
+npm run dev         # runs tsc --watch in the background
+
+# In another terminal, test your changes:
+node dist/bin/figma.js me                    # run directly without npm link
+node dist/bin/figma.js files get ABC123xyz --depth 1
+```
+
+> **Tip:** `npm run dev` only recompiles TypeScript. If you edit skill files (`src/skills/`), run `npm run build` to copy them into `dist/`.
+
+### Run Without Global Link
+
+If you don't want to `npm link`, you can always run the CLI directly:
+
+```bash
+node dist/bin/figma.js me
+node dist/bin/figma.js files get ABC123xyz --json
+node dist/bin/figma.js images export ABC123xyz --ids 1:2 --format png
+```
+
+### Testing With a Real Figma Token
+
+1. Go to [Figma → Settings → Personal Access Tokens](https://www.figma.com/developers/api#access-tokens)
+2. Generate a token (free, no paid plan needed)
+3. Export it:
+   ```bash
+   export FIGMA_TOKEN=figd_your_token_here
+   ```
+4. Test basic commands:
+   ```bash
+   figma me                                          # verify token works
+   figma files get <your-file-key> --depth 1         # get a file overview
+   figma files frames <your-file-key>                # list frames
+   figma components list <your-file-key>             # list components
+   figma images export <your-file-key> --ids <node-id> --format png  # export an image
+   ```
+
+### Adding a New Command
+
+1. Add types to `src/types/figma.ts`
+2. Add the API method in `src/clients/figma.ts`
+3. Create the command file in `src/commands/<group>/<command>.ts` (copy an existing one as template)
+4. Register it in `src/commands/<group>/index.ts`
+5. If it's a new group, register the group in `bin/figma.ts`
+6. Update skill files in `src/skills/`
+7. Rebuild: `npm run build`
+
+### Project Scripts
+
+| Script | What it does |
+|--------|-------------|
+| `npm run build` | Compile TypeScript + copy skill files to `dist/` |
+| `npm run dev` | Watch mode — recompile on file changes |
+| `npm start` | Run `dist/bin/figma.js` directly |
+| `npm link` | Make `figma` command available globally |
+
+---
+
 ## Limitations
 
 - **Read-only** for design content. The Figma REST API cannot create, edit, or move design elements. The only write operation is `comments add`.
