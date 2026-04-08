@@ -35,7 +35,7 @@ export interface AddCommentOptions {
 export interface FigmaClient {
   getMe(): Promise<FigmaUser>;
   getFile(fileKey: string, opts?: GetFileOptions): Promise<FigmaFile>;
-  getNodes(fileKey: string, nodeIds: string[]): Promise<FigmaNodesResponse>;
+  getNodes(fileKey: string, nodeIds: string[], opts?: { depth?: number }): Promise<FigmaNodesResponse>;
   getImages(fileKey: string, nodeIds: string[], opts?: GetImagesOptions): Promise<FigmaImageExportResponse>;
   getComponents(fileKey: string): Promise<FigmaComponentsResponse>;
   getTeamComponents(teamId: string): Promise<FigmaComponentsResponse>;
@@ -66,10 +66,14 @@ export function createFigmaClient(http: HttpClient): FigmaClient {
       return http.request<FigmaFile>({ path: `/v1/files/${fileKey}`, query });
     },
 
-    async getNodes(fileKey, nodeIds) {
+    async getNodes(fileKey, nodeIds, opts) {
+      const query: Record<string, string | number | boolean | undefined> = {
+        ids: nodeIds.join(','),
+      };
+      if (opts?.depth !== undefined) query.depth = opts.depth;
       return http.request<FigmaNodesResponse>({
         path: `/v1/files/${fileKey}/nodes`,
-        query: { ids: nodeIds.join(',') },
+        query,
       });
     },
 
@@ -131,16 +135,21 @@ export function createFigmaClient(http: HttpClient): FigmaClient {
     },
 
     async getFileByPages(fileKey) {
-      // Fetch file skeleton (pages only) to avoid V8 string limit on large files
-      const skeleton = await this.getFile(fileKey, { depth: 1 });
+      // Fetch skeleton with pages + their direct children (depth=2)
+      // to avoid V8 string limit on large files
+      const skeleton = await this.getFile(fileKey, { depth: 2 });
       const pages = skeleton.document.children ?? [];
 
-      // Fetch each page's full subtree individually via /nodes endpoint
+      // Fetch each top-level child's full subtree individually
       for (const page of pages) {
-        const response = await this.getNodes(fileKey, [page.id]);
-        const nodeData = response.nodes[page.id];
-        if (nodeData?.document) {
-          Object.assign(page, nodeData.document);
+        const children = page.children ?? [];
+        for (let i = 0; i < children.length; i++) {
+          const child = children[i];
+          const response = await this.getNodes(fileKey, [child.id]);
+          const nodeData = response.nodes[child.id];
+          if (nodeData?.document) {
+            children[i] = nodeData.document as FigmaNode;
+          }
         }
       }
 
@@ -148,7 +157,8 @@ export function createFigmaClient(http: HttpClient): FigmaClient {
     },
 
     async listFrames(fileKey) {
-      const file = await this.getFileByPages(fileKey);
+      // Frames are direct children of pages — depth=2 is sufficient
+      const file = await this.getFile(fileKey, { depth: 2 });
       const frames: FigmaNode[] = [];
       const stack: FigmaNode[] = [file.document];
       while (stack.length) {
