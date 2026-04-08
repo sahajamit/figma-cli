@@ -89,7 +89,28 @@ export function createFigmaClient(http: HttpClient): FigmaClient {
     },
 
     async getComponents(fileKey) {
-      return http.request<FigmaComponentsResponse>({ path: `/v1/files/${fileKey}/components` });
+      // Try published components endpoint first
+      const published = await http.request<FigmaComponentsResponse>({ path: `/v1/files/${fileKey}/components` });
+      if (published.meta.components.length > 0) return published;
+
+      // Fall back to scanning the document tree for local (unpublished) components
+      const file = await this.getFile(fileKey, { depth: undefined });
+      const components: FigmaComponent[] = [];
+      const stack: FigmaNode[] = [file.document];
+      while (stack.length) {
+        const node = stack.pop()!;
+        if (node.type === 'COMPONENT' || node.type === 'COMPONENT_SET') {
+          components.push({
+            key: '',
+            file_key: fileKey,
+            node_id: node.id,
+            name: node.name,
+            description: '',
+          });
+        }
+        if (node.children?.length) stack.push(...node.children);
+      }
+      return { meta: { components } };
     },
 
     async getTeamComponents(teamId) {

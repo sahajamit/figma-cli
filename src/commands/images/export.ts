@@ -36,7 +36,7 @@ export function registerExportCommand(images: Command): void {
     .description('Export nodes as images (PNG, SVG, JPG, PDF)')
     .requiredOption('--ids <ids>', 'Comma-separated node IDs (e.g. 1:2,3:4)')
     .option('-f, --format <format>', 'Image format: png, svg, jpg, pdf', 'png')
-    .option('-s, --scale <n>', 'Scale factor (0.01 to 4)', '1')
+    .option('-s, --scale <n>', 'Scale factor (0.01 to 4)', '2')
     .option('-o, --output-dir <dir>', 'Output directory', '.')
     .action(async (fileKey: string, opts: { ids: string; format: string; scale: string; outputDir: string }, command: Command) => {
       const config = loadConfig();
