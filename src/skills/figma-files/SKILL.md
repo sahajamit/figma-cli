@@ -110,7 +110,7 @@ figma images export <file-key> --ids 1:2,3:4 [--format png] [--scale 2] [--outpu
 **Options:**
 - `--ids` — **(required)** comma-separated node IDs
 - `--format` — png, svg, jpg, pdf (default: png)
-- `--scale` — 0.01 to 4 (default: 1)
+- `--scale` — 0.01 to 4 (default: 2)
 - `--output-dir` — output directory (default: current directory)
 
 **JSON output:**

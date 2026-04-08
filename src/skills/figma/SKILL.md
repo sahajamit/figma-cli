@@ -44,9 +44,17 @@ For large Figma files, always start with a shallow fetch and drill down:
 
 ## Global options
 
+- `--version` — show CLI version
 - `--json` — force JSON output (auto-enabled when piped)
 - `--no-color` — disable colored output
 - `--help` — show help for any command
+
+## Skill file management
+
+```bash
+figma install --skills      # Install AI agent skill files (Claude Code, Copilot, Cursor)
+figma uninstall --skills    # Remove installed skill files
+```
 
 ## Environment variables
 

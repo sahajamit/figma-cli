@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 
+import { createRequire } from 'node:module';
 import { program } from 'commander';
 import { registerMeCommand } from '../src/commands/me.js';
+
+const require = createRequire(import.meta.url);
+const { version } = require('../../package.json');
 import { registerFilesCommands } from '../src/commands/files/index.js';
 import { registerImagesCommands } from '../src/commands/images/index.js';
 import { registerComponentsCommands } from '../src/commands/components/index.js';
@@ -17,7 +21,7 @@ import { CliError } from '../src/errors.js';
 
 program
   .name('figma')
-  .version('0.1.0')
+  .version(version)
   .description(
     'CLI for Figma — read designs, export images, extract tokens\n\n' +
     'Every command accepts --json (machine-readable output).\n' +
