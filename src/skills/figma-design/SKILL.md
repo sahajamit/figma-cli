@@ -158,3 +158,45 @@ figma files nodes <file-key> --ids <component-node-id> --json
 
 # 4. Use the node structure + tokens to generate code
 ```
+
+---
+
+## Workflow: Understand UI specs for testing
+
+Use this when QA/testing teams need to understand design specs — field names, component types, visual styling, spacing — to write comprehensive test cases.
+
+```bash
+# 1. Export the screen as an image to see the full UI visually
+figma images export <file-key> --ids <screen-node-id> --format png --scale 2 --output-dir ./figma-exports --json
+
+# 2. View the exported image to identify all UI elements visually
+
+# 3. Get the node tree for the screen to extract structural details
+figma files nodes <file-key> --ids <screen-node-id> --json
+
+# 4. Search for specific components used in the screen
+figma components search <file-key> --query "Button" --json
+figma components search <file-key> --query "Input" --json
+
+# 5. Get design tokens to understand the visual spec (colors, spacing, typography)
+figma tokens export <file-key> --json > tokens.json
+```
+
+**How to interpret node tree data for test cases:**
+
+| Node property | What it tells you |
+|---|---|
+| `type: "TEXT"` + `characters` | Labels, headings, button text, placeholders, error messages |
+| `type: "INSTANCE"` + `name` | Reusable component (e.g. "Button/Primary", "Input/Text", "Checkbox") |
+| `type: "COMPONENT"` | Component definition — check `name` and `description` for intended behavior |
+| `name` on any node | Designer's label for the element (e.g. "Email Field", "Submit CTA") |
+| `children` array | Hierarchy — children inside a "Form" frame are the form fields |
+| `visible: false` | Hidden elements — may indicate conditional UI (shown on error, loading, etc.) |
+
+**Mapping Figma components to testable UI elements:**
+- `Button/*` → clickable actions — test click behavior, disabled states
+- `Input/*`, `TextField/*` → text inputs — test typing, validation, character limits
+- `Checkbox/*`, `Toggle/*` → boolean inputs — test checked/unchecked states
+- `Dropdown/*`, `Select/*` → selection inputs — test options, default selection
+- `Modal/*`, `Dialog/*` → overlays — test open/close, backdrop click
+- `Tab/*`, `Navigation/*` → navigation — test switching, active states
