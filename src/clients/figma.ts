@@ -47,6 +47,7 @@ export interface FigmaClient {
   getVersions(fileKey: string): Promise<FigmaVersionsResponse>;
   getTeamProjects(teamId: string): Promise<FigmaTeamProjectsResponse>;
   getProjectFiles(projectId: string): Promise<FigmaProjectFilesResponse>;
+  getFileByPages(fileKey: string): Promise<FigmaFile>;
   listFrames(fileKey: string): Promise<FigmaNode[]>;
   searchComponents(fileKey: string, query: string): Promise<FigmaComponent[]>;
 }
@@ -129,8 +130,25 @@ export function createFigmaClient(http: HttpClient): FigmaClient {
       return http.request<FigmaProjectFilesResponse>({ path: `/v1/projects/${projectId}/files` });
     },
 
+    async getFileByPages(fileKey) {
+      // Fetch file skeleton (pages only) to avoid V8 string limit on large files
+      const skeleton = await this.getFile(fileKey, { depth: 1 });
+      const pages = skeleton.document.children ?? [];
+
+      // Fetch each page's full subtree individually via /nodes endpoint
+      for (const page of pages) {
+        const response = await this.getNodes(fileKey, [page.id]);
+        const nodeData = response.nodes[page.id];
+        if (nodeData?.document) {
+          Object.assign(page, nodeData.document);
+        }
+      }
+
+      return skeleton;
+    },
+
     async listFrames(fileKey) {
-      const file = await this.getFile(fileKey);
+      const file = await this.getFileByPages(fileKey);
       const frames: FigmaNode[] = [];
       const stack: FigmaNode[] = [file.document];
       while (stack.length) {

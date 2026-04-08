@@ -39,7 +39,7 @@ export function registerExportCommand(tokens: Command): void {
       const client = createFigmaClient(http);
       const ctx = detectOutputMode(command.optsWithGlobals().json);
 
-      const file = await client.getFile(fileKey);
+      const file = await client.getFileByPages(fileKey);
       const designTokens = toDesignTokens(file);
       output(designTokens, formatHuman, ctx);
     });
