@@ -47,14 +47,14 @@ registerTokensCommands(program);
 program
   .command('install')
   .description('Install components (use --skills to install AI agent skill files)')
-  .option('--skills', 'Install AI agent skill files (Claude Code, Copilot, Cursor)')
+  .option('--skills', 'Install AI agent skill files (Claude Code, Cursor, Copilot)')
   .action((opts: { skills?: boolean }) => {
     if (opts.skills) {
       installSkills();
     } else {
       console.log('Usage: figma install --skills\n');
       console.log('Options:');
-      console.log('  --skills    Install AI agent skill files (Claude Code, Copilot, Cursor)');
+      console.log('  --skills    Install AI agent skill files (Claude Code, Cursor, Copilot)');
     }
   });
 

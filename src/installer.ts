@@ -34,6 +34,10 @@ export interface InstallResult {
   skipped: string[];
 }
 
+/**
+ * Install skills to home-directory targets (Claude Code, Cursor, Copilot standalone).
+ * Does NOT install to .github/copilot-instructions.md (requires CWD to be a project root).
+ */
 export function installSkillsToHome(): InstallResult {
   const home = homedir();
   const installed: string[] = [];
@@ -48,13 +52,13 @@ export function installSkillsToHome(): InstallResult {
       continue;
     }
 
-    // Claude Code
+    // ── Claude Code ──────────────────────────────────────────────────
     const claudeTarget = join(home, '.claude', 'skills', skill.name, 'SKILL.md');
     ensureDir(dirname(claudeTarget));
     copyFileSync(sourcePath, claudeTarget);
     installed.push(`Claude Code  →  ${claudeTarget}`);
 
-    // Cursor
+    // ── Cursor ───────────────────────────────────────────────────────
     const cursorRulesDir = join(home, '.cursor', 'rules');
     if (existsSync(cursorRulesDir)) {
       const cursorTarget = join(cursorRulesDir, `${skill.name}.md`);
@@ -64,7 +68,7 @@ export function installSkillsToHome(): InstallResult {
       skipped.push('Cursor (~/.cursor/rules not found — open Cursor at least once to create it)');
     }
 
-    // Copilot (standalone)
+    // ── Copilot (standalone) ─────────────────────────────────────────
     const copilotSkillsTarget = join(home, '.copilot', 'skills', skill.name, 'SKILL.md');
     ensureDir(dirname(copilotSkillsTarget));
     copyFileSync(sourcePath, copilotSkillsTarget);
@@ -74,6 +78,10 @@ export function installSkillsToHome(): InstallResult {
   return { installed, skipped };
 }
 
+/**
+ * Install skills to the GitHub Copilot project-scoped target (.github/copilot-instructions.md).
+ * Only works when CWD is a project root with a .github/ directory.
+ */
 function installSkillsToGitHubCopilot(): InstallResult {
   const installed: string[] = [];
   const skipped: string[] = [];
@@ -120,6 +128,10 @@ function installSkillsToGitHubCopilot(): InstallResult {
   return { installed, skipped };
 }
 
+/**
+ * Full install: all targets including project-scoped GitHub Copilot.
+ * Used by `figma install --skills`.
+ */
 export function installSkills(): void {
   const homeResult = installSkillsToHome();
   const ghResult = installSkillsToGitHubCopilot();
@@ -146,6 +158,7 @@ export function uninstallSkills(): void {
   const skipped: string[] = [];
 
   for (const skill of SKILLS) {
+    // ── Claude Code ──────────────────────────────────────────────────
     const claudeTarget = join(home, '.claude', 'skills', skill.name, 'SKILL.md');
     if (existsSync(claudeTarget)) {
       unlinkSync(claudeTarget);
@@ -153,12 +166,14 @@ export function uninstallSkills(): void {
       removed.push(`Claude Code  →  ${claudeTarget}`);
     }
 
+    // ── Cursor ───────────────────────────────────────────────────────
     const cursorTarget = join(home, '.cursor', 'rules', `${skill.name}.md`);
     if (existsSync(cursorTarget)) {
       unlinkSync(cursorTarget);
       removed.push(`Cursor       →  ${cursorTarget}`);
     }
 
+    // ── Copilot (standalone) ─────────────────────────────────────────
     const copilotSkillsTarget = join(home, '.copilot', 'skills', skill.name, 'SKILL.md');
     if (existsSync(copilotSkillsTarget)) {
       unlinkSync(copilotSkillsTarget);
@@ -166,6 +181,7 @@ export function uninstallSkills(): void {
       removed.push(`Copilot      →  ${copilotSkillsTarget}`);
     }
 
+    // ── GitHub Copilot ───────────────────────────────────────────────
     const copilotTarget = join('.github', 'copilot-instructions.md');
     const marker = `<!-- ${skill.name}-skill -->`;
     if (existsSync(copilotTarget)) {
@@ -188,6 +204,7 @@ export function uninstallSkills(): void {
     }
   }
 
+  // ── Summary ──────────────────────────────────────────────────────────
   if (removed.length) {
     console.log('\nfigma skills removed:');
     for (const msg of removed) {

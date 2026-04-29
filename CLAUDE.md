@@ -79,7 +79,6 @@ src/
   output.ts                       # JSON vs human-readable output (auto-detects TTY)
   errors.ts                       # CliError, ConfigError, ApiError
   installer.ts                    # Skill file installer for AI agents
-  postinstall.ts                  # Auto-install skills on npm install
   types/
     figma.ts                      # All Figma domain types
   tokens/
@@ -132,7 +131,9 @@ Three modular skill files:
 - **`figma-files`** — file, image, comment, version, project commands
 - **`figma-design`** — component, style, variable, design token commands
 
-Targets: Claude Code (`~/.claude/skills/`), Cursor (`~/.cursor/rules/`), Copilot (`~/.copilot/skills/`), GitHub Copilot (`.github/copilot-instructions.md`).
+Targets: Claude Code (`~/.claude/skills/`), Cursor (`~/.cursor/rules/`), Copilot standalone (`~/.copilot/skills/`), GitHub Copilot (`.github/copilot-instructions.md`).
+
+The package has no `postinstall` hook — `npm install -g @sahajamit/figma-cli` is silent and never writes to the home directory. Skill files only land on disk when the user explicitly runs `figma install --skills`. The install command always overwrites existing files.
 
 ## Reference Projects
 
