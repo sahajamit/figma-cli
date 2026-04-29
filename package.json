@@ -1,6 +1,6 @@
 {
   "name": "@sahajamit/figma-cli",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "CLI for Figma — read designs, export images, extract tokens. Works with any AI agent.",
   "type": "module",
   "license": "MIT",
