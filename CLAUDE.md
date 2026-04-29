@@ -61,6 +61,19 @@ npm link               # make `figma` available globally
 
 Entry point: `bin/figma.ts` → compiles to `dist/bin/figma.js`
 
+## Pre-publish Checklist
+
+Before running `npm publish`, fix any of these if they apply:
+
+- **`bin` paths must NOT start with `./`.** npm auto-strips the `./` and emits a warning like:
+  > `npm warn publish "bin[figma]" script name dist/bin/figma.js was invalid and removed`
+  Use `"bin": { "figma": "dist/bin/figma.js" }`, not `"./dist/bin/figma.js"`. (This was deferred at 0.2.0 — the package still works because npm corrects it server-side.)
+- Run `npm pack --dry-run` and confirm the file list looks right (no `.env`, no test fixtures, only `dist/`, `LICENSE`, `README.md`).
+- Run `npm audit --omit=dev` and confirm 0 vulnerabilities.
+- Bump `version` in `package.json` (use `npm version <major|minor|patch> --no-git-tag-version` so it updates the lockfile too).
+- Commit with the bare-version message style (`0.2.0`, not `Bump to v0.2.0`) — matches existing repo history.
+- After publish, push the commit AND an annotated tag: `git tag -a v<x.y.z> -m "v<x.y.z>" && git push origin main v<x.y.z>`.
+
 ## Authentication
 
 ```bash
